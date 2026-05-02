@@ -1,6 +1,5 @@
 # Dependencies
 node_modules/
-package-lock.json
 
 # Environment variables
 .env
@@ -29,3 +28,4 @@ Thumbs.db
 
 # Runtime
 .history/
+PRODUCTION_READINESS.md
