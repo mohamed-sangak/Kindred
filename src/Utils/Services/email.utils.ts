@@ -3,13 +3,12 @@ import { IEmailArgument } from '../../Common'
 
 export const sendEmail = async ({ to, cc, subject, content, attachments = [] }: IEmailArgument) => {
   const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT),
     secure: true,
-    service: 'Gmail',
     auth: {
-      user: process.env.USER_EMAIL,
-      pass: process.env.USER_EMAIL_PASSWORD,
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
     },
   })
 
