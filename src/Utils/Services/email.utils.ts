@@ -2,10 +2,11 @@ import nodemailer from 'nodemailer'
 import { IEmailArgument } from '../../Common'
 
 export const sendEmail = async ({ to, cc, subject, content, attachments = [] }: IEmailArgument) => {
+  const port = Number(process.env.SMTP_PORT)
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT),
-    secure: true,
+    port,
+    secure: port === 465, // 465 = implicit TLS, 587 = STARTTLS
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
