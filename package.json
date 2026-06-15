@@ -8,7 +8,8 @@
     "start": "node dist/index.js",
     "dev": "nodemon",
     "typecheck": "tsc --noEmit",
-    "test": "npm run typecheck"
+    "test": "npm run typecheck",
+    "export-spec": "ts-node -e \"const m = require('./src/Config/swagger.config'); require('fs').writeFileSync('openapi.json', JSON.stringify(m.swaggerSpec, null, 2)); console.log('openapi.json written')\""
   },
   "keywords": [],
   "author": "",

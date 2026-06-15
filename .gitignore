@@ -29,3 +29,6 @@ Thumbs.db
 # Runtime
 .history/
 CLAUDE.md
+
+# Generated files
+openapi.json
