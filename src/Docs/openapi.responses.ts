@@ -62,6 +62,33 @@ export const responseSchemas = {
     },
   },
 
+  // get-profile-data: the authenticated User plus freshly signed URLs for the two pictures.
+  ProfileData: {
+    allOf: [
+      ref('User'),
+      {
+        type: 'object',
+        properties: {
+          profilePictureUrl: { type: 'string', format: 'uri', nullable: true },
+          coverPictureUrl: { type: 'string', format: 'uri', nullable: true },
+        },
+      },
+    ],
+  },
+
+  // Public user projection returned by list-users (raw S3 keys, not signed URLs).
+  UserListItem: {
+    type: 'object',
+    properties: {
+      _id: objectIdString,
+      firstName: { type: 'string' },
+      lastName: { type: 'string' },
+      gender: { type: 'string', enum: ['male', 'female', 'other'] },
+      profilePicture: { type: 'string', nullable: true },
+      coverPicture: { type: 'string', nullable: true },
+    },
+  },
+
   Post: {
     type: 'object',
     properties: {

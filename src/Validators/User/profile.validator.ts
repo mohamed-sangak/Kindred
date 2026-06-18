@@ -22,6 +22,13 @@ export const RenewSignedUrlValidator = {
   }),
 }
 
+export const ListUsersValidator = {
+  query: z.object({
+    page: z.coerce.number().int().positive().optional(),
+    limit: z.coerce.number().int().positive().max(100).optional(),
+  }).strict(),
+}
+
 export const SendFriendShipRequestValidator = {
   body: z.strictObject({
     requestToId: objectId,

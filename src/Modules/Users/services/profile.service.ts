@@ -4,6 +4,7 @@ import { ChatTypeEnum, FriendShipStatusEnum, IFriendShip, IRequest } from '../..
 import { CommentModel, ConversationModel, FriendShipModel, MessageModel, PostModel, ReactModel, UserModel } from '../../../Db/Models'
 import { CommentRepository, ConversationRepository, FriendShipRepository, MessageRepository, PostRepository, ReactRepository, UserRepository } from '../../../Db/Repositories'
 import { BadRequestException, ConflictException, encrypt, S3ClientService } from '../../../Utils'
+import { pagination } from '../../../Utils/Pagination/pagination.utils'
 import { SuccessResponse } from '../../../Utils/Response/response-helper.utils'
 
 export class ProfileService {
@@ -81,6 +82,87 @@ export class ProfileService {
       SuccessResponse('Profile picture uploaded successfully', 200, {
         key,
         url,
+      }),
+    )
+  }
+
+  uploadCoverPicture = async (req: Request, res: Response) => {
+    const file = req.file
+    const { user } = (req as unknown as IRequest).loggedInUser
+
+    if (!file) throw new BadRequestException('No file uploaded')
+
+    const oldCoverPicture = user.coverPicture?.toString()
+    const { key, url } = await this.s3Client.uploadFileOnS3(file, `${user._id}/cover`)
+
+    try {
+      user.coverPicture = key
+      await user.save()
+    } catch (error) {
+      try {
+        await this.s3Client.deleteFileFromS3(key)
+      } catch (cleanupError) {
+        console.warn('Failed to delete uploaded cover picture after save failure', cleanupError)
+      }
+      throw error
+    }
+
+    if (oldCoverPicture && oldCoverPicture !== key) {
+      try {
+        await this.s3Client.deleteFileFromS3(oldCoverPicture)
+      } catch (error) {
+        console.warn('Failed to delete old cover picture from S3', error)
+      }
+    }
+
+    res.json(
+      SuccessResponse('Cover picture uploaded successfully', 200, {
+        key,
+        url,
+      }),
+    )
+  }
+
+  getProfileData = async (req: Request, res: Response) => {
+    const { user } = (req as unknown as IRequest).loggedInUser
+
+    const [profilePictureUrl, coverPictureUrl] = await Promise.all([
+      user.profilePicture ? this.s3Client.getFileWithSignedUrl(user.profilePicture.toString()) : null,
+      user.coverPicture ? this.s3Client.getFileWithSignedUrl(user.coverPicture.toString()) : null,
+    ])
+
+    const { OTPS, ...profile } = user.toObject()
+
+    res.json(SuccessResponse('Profile data fetched successfully', 200, { ...profile, profilePictureUrl, coverPictureUrl }))
+  }
+
+  listUsers = async (req: Request, res: Response) => {
+    const {
+      user: { _id },
+    } = (req as unknown as IRequest).loggedInUser
+    const { page, limit } = req.query
+
+    const { limit: currentLimit, skip } = pagination({
+      page: page ? Number(page) : undefined,
+      limit: limit ? Number(limit) : undefined,
+    })
+    const filters = { _id: { $ne: _id } }
+
+    const [users, total] = await Promise.all([
+      this.userRepository.findDocuments(filters, 'firstName lastName gender profilePicture coverPicture', {
+        skip,
+        limit: currentLimit,
+        sort: { createdAt: -1 },
+      }),
+      this.userRepository.countDocuments(filters),
+    ])
+
+    res.json(
+      SuccessResponse('Users fetched successfully', 200, {
+        users,
+        total,
+        page: Number(page) || 1,
+        limit: currentLimit,
       }),
     )
   }

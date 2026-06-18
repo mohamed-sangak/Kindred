@@ -4,6 +4,7 @@ import profileService from '../services/profile.service'
 import {
   CreateGroupValidator,
   ListFriendShipRequestsValidator,
+  ListUsersValidator,
   RenewSignedUrlValidator,
   RespondToFriendShipRequestValidator,
   SendFriendShipRequestValidator,
@@ -19,7 +20,7 @@ profileController.put('/update-profile', authentication, validationMiddleware(Up
 profileController.delete('/delete-account', authentication, profileService.deletAccount)
 
 //get profile data
-// profileController.get("/profile-data",authentication,profileService.getProfileData)
+profileController.get('/profile-data', authentication, profileService.getProfileData)
 
 //upload profile picture
 profileController.post('/profile-picture', authentication, uploadRateLimitMiddleware, Multer().single('profilePicture'), profileService.uploadProfilePicture)
@@ -28,10 +29,10 @@ profileController.post('/profile-picture', authentication, uploadRateLimitMiddle
 profileController.post('/renew-signed-url', authentication, validationMiddleware(RenewSignedUrlValidator), profileService.renewSignedUrl)
 
 //upload cover picture
-// profileController.post("/cover-picture",authentication,Multer().single("coverPicture"),profileService.uploadCoverPicture)
+profileController.post('/cover-picture', authentication, uploadRateLimitMiddleware, Multer().single('coverPicture'), profileService.uploadCoverPicture)
 
 // list all users
-// profileController.get("/users",authentication,profileService.listUsers)
+profileController.get('/users', authentication, validationMiddleware(ListUsersValidator), profileService.listUsers)
 
 // send friendship request
 profileController.post('/send-friendship-request', authentication, validationMiddleware(SendFriendShipRequestValidator), profileService.sendFriendShipRequest)

@@ -68,6 +68,15 @@ const friendshipListData = {
     groups: { type: 'array', items: schemaRef('Group') },
   },
 }
+const listUsersData = {
+  type: 'object',
+  properties: {
+    users: { type: 'array', items: schemaRef('UserListItem') },
+    total: { type: 'integer' },
+    page: { type: 'integer' },
+    limit: { type: 'integer' },
+  },
+}
 const healthData = {
   type: 'object',
   properties: {
@@ -186,6 +195,29 @@ export const paths = {
       },
     },
   },
+  '/api/users/profile-data': {
+    get: {
+      tags: ['Users'],
+      summary: 'Get the authenticated user profile with signed picture URLs',
+      security: bearer,
+      responses: {
+        '200': success('Profile data fetched successfully', schemaRef('ProfileData')),
+        '401': errorRef('Unauthorized'),
+      },
+    },
+  },
+  '/api/users/users': {
+    get: {
+      tags: ['Users'],
+      summary: 'List users (paginated, excludes the authenticated user)',
+      security: bearer,
+      parameters: [pageParam, limitParam],
+      responses: {
+        '200': success('Users fetched successfully', listUsersData),
+        '401': errorRef('Unauthorized'),
+      },
+    },
+  },
   '/api/users/profile-picture': {
     post: {
       tags: ['Users'],
@@ -201,6 +233,28 @@ export const paths = {
       },
       responses: {
         '200': success('Profile picture uploaded successfully', s3KeyData),
+        '400': errorRef('BadRequest'),
+        '401': errorRef('Unauthorized'),
+        '413': errorRef('PayloadTooLarge'),
+        '429': errorRef('TooManyRequests'),
+      },
+    },
+  },
+  '/api/users/cover-picture': {
+    post: {
+      tags: ['Users'],
+      summary: 'Upload/replace the cover picture',
+      security: bearer,
+      requestBody: {
+        required: true,
+        content: {
+          'multipart/form-data': {
+            schema: { type: 'object', required: ['coverPicture'], properties: { coverPicture: { type: 'string', format: 'binary' } } },
+          },
+        },
+      },
+      responses: {
+        '200': success('Cover picture uploaded successfully', s3KeyData),
         '400': errorRef('BadRequest'),
         '401': errorRef('Unauthorized'),
         '413': errorRef('PayloadTooLarge'),
